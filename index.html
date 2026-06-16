@@ -251,7 +251,7 @@ let pos = randomSpot();
 let target = randomSpot();
 let mode = 'float';   // float | held | eaten | pinball
 let angle = 0, spinV = 0.15;
-let vel = {x:0, y:0}, bounces = 0, grace = 0;
+let vel = {x:0, y:0}, bounces = 0;
 let wallBounces = 0, edgeBounces = 0, lastEdge = 0;
 let donuts = 0;
 
@@ -287,19 +287,7 @@ function tick(now){
     if (pos.y < R)   { pos.y = R;   vel.y =  Math.abs(vel.y); hit = 1; edge = 3; bx = pos.x; by = 0; }
     if (pos.y > H-R) { pos.y = H-R; vel.y = -Math.abs(vel.y); hit = 1; edge = 4; bx = pos.x; by = H; }
 
-    // bounce off the head too (after a grace period so it can leave the mouth)
-    grace -= dt;
-    const hr = headRect();
-    const hx = hr.left+hr.width/2, hy = hr.top+hr.height/2;
-    const minD = hr.width/2 + R;
-    const dx = pos.x-hx, dy = pos.y-hy;
-    const d = Math.hypot(dx,dy);
-    if (grace <= 0 && d < minD && d > 0.01){
-      const nx = dx/d, ny = dy/d;
-      pos.x = hx + nx*minD; pos.y = hy + ny*minD;
-      const dot = vel.x*nx + vel.y*ny;
-      if (dot < 0){ vel.x -= 2*dot*nx; vel.y -= 2*dot*ny; hit = 2; }
-    }
+    // the head is not an obstacle — the donut flies straight past it
 
     let sp = Math.hypot(vel.x, vel.y);
     if (hit === 1){
@@ -313,11 +301,6 @@ function tick(now){
         const boost = 650 / Math.max(sp, 1);
         vel.x *= boost; vel.y *= boost;
       }
-      bounces++;
-    } else if (hit === 2){
-      vel.x *= 0.82; vel.y *= 0.82;       // head is a softer bumper
-      bounceSound(sp);
-      head.classList.add('spit'); setTimeout(()=>head.classList.remove('spit'),300);
       bounces++;
     }
     vel.x *= Math.pow(0.5, dt/2.6);       // gentler air friction so the bouncing lasts
@@ -395,7 +378,7 @@ function feed(){
     const a = (28 + Math.random()*34) * Math.PI/180;   // 28°–62° below horizontal
     const speed = 1150 + Math.random()*300;
     vel = { x: Math.cos(a)*speed*dir, y: Math.sin(a)*speed };
-    bounces = 0; wallBounces = 0; edgeBounces = 0; lastEdge = 0; grace = 0.3;
+    bounces = 0; wallBounces = 0; edgeBounces = 0; lastEdge = 0;
     mode = 'pinball';
     setTimeout(()=>{ setFace('rest'); head.classList.remove('spit'); }, 700);
   }, inhaleDur*1000);
